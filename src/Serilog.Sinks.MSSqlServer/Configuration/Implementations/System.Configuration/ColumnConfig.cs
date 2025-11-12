@@ -90,6 +90,13 @@ namespace Serilog.Sinks.MSSqlServer
             set { this[nameof(NonClusteredIndexDirection)] = value; }
         }
 
+        [ConfigurationProperty("DefaultValue")]
+        public object DefaultValue
+        {
+            get { return this[nameof(DefaultValue)]; }
+            set { this[nameof(DefaultValue)] = value; }
+        }
+
         internal SqlColumn AsSqlColumn()
         {
             var sqlColumn = new SqlColumn();
@@ -115,6 +122,8 @@ namespace Serilog.Sinks.MSSqlServer
 
             SetProperty.IfEnumProvided<SqlIndexDirection>(this, nameof(NonClusteredIndexDirection),
                 (val) => sqlColumn.NonClusteredIndexDirection = val);
+
+            SetProperty.IfProvided<object>(this, nameof(DefaultValue), (val) => sqlColumn.ParseAndSetDefaultValue(val));
 
             return sqlColumn;
         }

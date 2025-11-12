@@ -27,6 +27,7 @@ namespace Serilog.Sinks.MSSqlServer.Configuration
             SetProperty.IfProvided<int>(source, nameof(target.DataLength), value => target.DataLength = value);
             SetProperty.IfProvided<bool>(source, nameof(target.NonClusteredIndex), value => target.NonClusteredIndex = value);
             SetProperty.IfEnumProvided<SqlIndexDirection>(source, nameof(target.NonClusteredIndexDirection), value => target.NonClusteredIndexDirection = value);
+            SetProperty.IfProvided<string>(source, nameof(target.DefaultValue), value => target.ParseAndSetDefaultValue(value));
         }
 
         private static void ReadPropertiesColumnOptions(MSSqlServerConfigurationSection config, ColumnOptions columnOptions)

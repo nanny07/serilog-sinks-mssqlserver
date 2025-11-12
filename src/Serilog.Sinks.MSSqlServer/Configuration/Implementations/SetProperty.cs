@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Microsoft.Extensions.Configuration;
 
 namespace Serilog.Sinks.MSSqlServer
 {
@@ -27,6 +28,28 @@ namespace Serilog.Sinks.MSSqlServer
             try
             {
                 var setting = (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
+                setter(setting);
+            }
+            // don't change the property if the conversion fails
+            catch (InvalidCastException) { }
+            catch (OverflowException) { }
+        }
+
+        /// <summary>
+        /// aaa
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="section"></param>
+        /// <param name="sectionKey"></param>
+        /// <param name="setter"></param>
+        public static void IfNotNull2<T>(IConfigurationSection section, string sectionKey, PropertySetter<T> setter)
+        {
+            if (section == null || sectionKey == null || setter == null) return;
+            try
+            {
+                var setting1 = section.GetSection(sectionKey).Value;
+                var setting = (T)Convert.ChangeType(setting1, typeof(T), CultureInfo.InvariantCulture);
+
                 setter(setting);
             }
             // don't change the property if the conversion fails

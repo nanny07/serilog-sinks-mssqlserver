@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using Moq;
 using Serilog.Events;
-using Serilog.Sinks.MSSqlServer;
 using Serilog.Sinks.MSSqlServer.Output;
 using Serilog.Sinks.MSSqlServer.Tests.TestUtils;
 using Xunit;

@@ -47,5 +47,16 @@ namespace Serilog.Sinks.MSSqlServer.Tests.ColumnOptions
             // Act and assert - should throw
             Assert.Throws<ArgumentException>(() => options.SpanId.DataType = SqlDbType.NChar);
         }
+
+        [Fact]
+        public void CannotSetWrongDefaultValueForDefaultType()
+        {
+            // Arrange
+            var defaultValue = DateTime.MinValue;
+            var columnName = "TestColumn";
+
+            // Act and assert - should throw
+            Assert.Throws<ArgumentException>(() => new SqlColumn(columnName, SqlDbType.DateTime, defaultValue: Guid.NewGuid()));
+        }
     }
 }

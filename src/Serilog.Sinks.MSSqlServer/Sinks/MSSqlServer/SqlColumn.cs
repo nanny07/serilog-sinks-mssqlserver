@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using static System.FormattableString;
 
@@ -15,6 +16,7 @@ namespace Serilog.Sinks.MSSqlServer
         private string _propertyName;
         private bool _resolveHierarchicalPropertyName = true;
         private readonly List<string> _propertyNameHierarchy = new List<string>();
+        private object _defaultValue;
 
         /// <summary>
         /// Default constructor.
@@ -25,12 +27,13 @@ namespace Serilog.Sinks.MSSqlServer
         /// <summary>
         /// Constructor with property initialization.
         /// </summary>
-        public SqlColumn(string columnName, SqlDbType dataType, bool allowNull = true, int dataLength = -1)
+        public SqlColumn(string columnName, SqlDbType dataType, bool allowNull = true, int dataLength = -1, object defaultValue = null)
         {
             ColumnName = columnName;
             DataType = dataType;
             AllowNull = allowNull;
             DataLength = dataLength;
+            ParseAndSetDefaultValue(defaultValue);
         }
 
         /// <summary>
@@ -49,6 +52,23 @@ namespace Serilog.Sinks.MSSqlServer
 
             if (DataLength == 0 && SqlDataTypes.DataLengthRequired.Contains(DataType))
                 throw new ArgumentException(Invariant($".NET type {dataColumn.DataType} maps to a SQL column data type requiring a non-zero DataLength property."));
+
+            DefaultValue = dataColumn.DefaultValue;
+        }
+
+        /// <summary>
+        /// The default value of the column in the database
+        /// </summary>
+        public object DefaultValue
+        {
+            get
+            {
+                return _defaultValue;
+            }
+            private set
+            {
+                _defaultValue = value;
+            }
         }
 
         /// <summary>
@@ -161,7 +181,8 @@ namespace Serilog.Sinks.MSSqlServer
             {
                 ColumnName = ColumnName,
                 DataType = SqlDataTypes.SystemTypeMap[DataType],
-                AllowDBNull = AllowNull
+                AllowDBNull = AllowNull,
+                DefaultValue = DefaultValue,
             };
 
             if (SqlDataTypes.DataLengthRequired.Contains(DataType))
@@ -198,6 +219,32 @@ namespace Serilog.Sinks.MSSqlServer
             else
             {
                 _propertyNameHierarchy.Add(PropertyName);
+            }
+        }
+
+        internal void ParseAndSetDefaultValue(object value)
+        {
+            ParseAndSetDefaultValue(value?.ToString());
+        }
+
+        internal void ParseAndSetDefaultValue(string value)
+        {
+            if (value is null)
+                return;
+
+            var targetType = SqlDataTypes.SystemTypeMap[_dataType];
+
+            TypeConverter converter = TypeDescriptor.GetConverter(targetType);
+            if (converter.CanConvertFrom(typeof(string)))
+            {
+                try
+                {
+                    _defaultValue = converter.ConvertFromInvariantString(value);
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException(Invariant($"Default value '{value}' is not valid for type {_dataType} - {ex.Message}"), ex);
+                }
             }
         }
     }
